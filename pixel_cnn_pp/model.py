@@ -98,7 +98,8 @@ def model_spec(x, h=None, init=False, ema=None, dropout_p=0.5, nr_resnet=5, nr_f
                 fs = nn.int_shape(f)
                 f += nn.nin(tf.random_uniform(shape=fs[:-1] + [4], minval=-1., maxval=1.), 64)
                 f = nn.nin(nn.concat_elu(f), 64)
-                x_sample = tf.tanh(nn.nin(nn.concat_elu(f), 3, init_scale=0.1))
+                #multiply 3 by block size
+                x_sample = tf.tanh(nn.nin(nn.concat_elu(f), xs[3], init_scale=0.1))
 
                 x_sample = tf.split(x_sample, 10, 0)
 
@@ -114,4 +115,3 @@ def model_spec(x, h=None, init=False, ema=None, dropout_p=0.5, nr_resnet=5, nr_f
                 assert len(ul_list) == 0
 
                 return x_out
-

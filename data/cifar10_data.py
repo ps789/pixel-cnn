@@ -56,9 +56,9 @@ class DataLoader(object):
     """ an object that generates batches of CIFAR-10 data for training """
 
     def __init__(self, data_dir, subset, batch_size, rng=None, shuffle=False, return_labels=False):
-        """ 
+        """
         - data_dir is location where to store files
-        - subset is train|test 
+        - subset is train|test
         - batch_size is int, of #examples to load at once
         - rng is np.random.RandomState object for reproducibility
         """
@@ -76,7 +76,20 @@ class DataLoader(object):
         # load CIFAR-10 training data to RAM
         self.data, self.labels = load(os.path.join(data_dir,'cifar-10-python'), subset=subset)
         self.data = np.transpose(self.data, (0,2,3,1)) # (N,3,32,32) -> (N,32,32,3)
-        
+        n_block_x_dim, n_block_y_dim = 4, 4
+        n_blocks = int((32 * 32) / (n_block_x_dim * n_block_y_dim))
+        n_x_blocks = int(32 / n_block_x_dim)
+        n_y_blocks = int(32 / n_block_y_dim)
+        x_rnn = np.zeros([self.data.shape[0], n_x_blocks, n_y_blocks, n_block_dim], dtype = np.uint8)
+
+        for i in range(self.data.shape[0]):
+            for xi in range(n_x_blocks):
+                for yi in range(n_y_blocks):
+                    x_rnn[i,xi,yi,:] = x_tr[
+                        i,(xi*n_block_x_dim):((xi+1)*n_block_x_dim),(yi*n_block_y_dim):((yi+1)*n_block_y_dim),:
+                    ].flatten()
+        self.data = x_rnn
+
         self.p = 0 # pointer to where we are in iteration
         self.rng = np.random.RandomState(1) if rng is None else rng
 
@@ -118,5 +131,3 @@ class DataLoader(object):
             return x
 
     next = __next__  # Python 2 compatibility (https://stackoverflow.com/questions/29578469/how-to-make-an-object-both-a-python2-and-python3-iterator)
-
-
